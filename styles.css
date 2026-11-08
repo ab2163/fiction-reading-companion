@@ -212,18 +212,20 @@ button:hover {
   right: 0.4rem;
   top: 50%;
   transform: translateY(-50%);
-  background: transparent;
-  color: #888;
-  border: none;
-  font-size: 1.2rem;
-  padding: 0.2rem 0.4rem;
+  background: #333;
+  color: #f5e6c8;
+  border: 1px solid #555;
+  font-size: 1.3rem;
+  font-weight: bold;
+  padding: 0.15rem 0.45rem;
   cursor: pointer;
   line-height: 1;
+  border-radius: 3px;
 }
 
 .history-item .remove-btn:hover {
   color: #f5e6c8;
-  background: #333;
+  background: #444;
 }
 
 .history-item:hover {
