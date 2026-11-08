@@ -211,7 +211,15 @@ async function generate() {
   output.classList.remove('hidden');
   imagesDiv.innerHTML = '';
   loading.classList.remove('hidden');
+  document.getElementById('statusNote').style.display = 'block';
   contentDiv.innerHTML = '';
+
+  const startTime = Date.now();
+  const elapsedEl = document.getElementById('elapsed');
+  const timer = setInterval(() => {
+    const secs = Math.floor((Date.now() - startTime) / 1000);
+    elapsedEl.textContent = `(${secs}s)`;
+  }, 1000);
 
   if (cached) {
     const data = JSON.parse(cached);
@@ -223,7 +231,9 @@ async function generate() {
       timestamp: Date.now()
     });
     renderResponse(data, titleEl, contentDiv, imagesDiv, mode, book);
+    clearInterval(timer);
     loading.classList.add('hidden');
+    document.getElementById('statusNote').style.display = 'none';
     return;
   }
 
@@ -257,7 +267,8 @@ async function generate() {
       body: JSON.stringify({
         model: TEXT_MODEL,
         messages,
-        temperature: 0.7
+        temperature: 0.7,
+        stream: true
       })
     });
 
@@ -266,8 +277,37 @@ async function generate() {
       throw new Error(`API error: ${res.status} ${err}`);
     }
 
-    const json = await res.json();
-    const text = json.choices?.[0]?.message?.content || 'No response received.';
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
+
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const dataStr = line.slice(6).trim();
+          if (dataStr === '[DONE]') continue;
+          try {
+            const chunk = JSON.parse(dataStr);
+            const delta = chunk.choices?.[0]?.delta?.content || '';
+            if (delta) {
+              fullText += delta;
+              contentDiv.innerHTML = marked.parse(fullText);
+            }
+          } catch (e) {
+            // ignore parse errors on partial chunks
+          }
+        }
+      }
+    }
+
+    const text = fullText || 'No response received.';
 
     const data = { text, images: [] };
 
@@ -310,9 +350,11 @@ async function generate() {
 
     renderResponse(data, titleEl, contentDiv, imagesDiv, mode, book);
   } catch (err) {
-    contentDiv.innerHTML = `<p style="color: #c00;">Error: ${err.message}</p><p>Check your API key and try again.</p>`;
+    contentDiv.innerHTML = `<p style="color: #c00;">Error: ${err.message}</p><p>Check your API key and try again. If you refreshed the page while it was still generating, the request was cancelled.</p>`;
   } finally {
+    clearInterval(timer);
     loading.classList.add('hidden');
+    document.getElementById('statusNote').style.display = 'none';
   }
 }
 
