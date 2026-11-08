@@ -258,56 +258,89 @@ async function generate() {
       { role: 'user', content: userPrompt }
     ];
 
-    const res = await fetch(`${API_BASE}/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model: TEXT_MODEL,
-        messages,
-        temperature: 0.7,
-        stream: true
-      })
-    });
+    let text = '';
+    let usedStreaming = true;
 
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`API error: ${res.status} ${err}`);
-    }
+    try {
+      // Try streaming first
+      const res = await fetch(`${API_BASE}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: TEXT_MODEL,
+          messages,
+          temperature: 0.7,
+          stream: true
+        })
+      });
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-    let fullText = '';
-    let buffer = '';
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`API error: ${res.status} ${err}`);
+      }
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = '';
+      let buffer = '';
 
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const dataStr = line.slice(6).trim();
-          if (dataStr === '[DONE]') continue;
-          try {
-            const chunk = JSON.parse(dataStr);
-            const delta = chunk.choices?.[0]?.delta?.content || '';
-            if (delta) {
-              fullText += delta;
-              contentDiv.innerHTML = marked.parse(fullText);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const dataStr = line.slice(6).trim();
+            if (dataStr === '[DONE]') continue;
+            try {
+              const chunk = JSON.parse(dataStr);
+              const delta = chunk.choices?.[0]?.delta?.content || '';
+              if (delta) {
+                fullText += delta;
+                contentDiv.innerHTML = marked.parse(fullText);
+              }
+            } catch (e) {
+              // ignore parse errors on partial chunks
             }
-          } catch (e) {
-            // ignore parse errors on partial chunks
           }
         }
       }
-    }
+      text = fullText || 'No response received.';
+    } catch (streamErr) {
+      console.warn('Streaming failed, falling back to non-streaming:', streamErr);
+      usedStreaming = false;
+      contentDiv.innerHTML = '<p><em>Streaming failed, retrying normally…</em></p>';
 
-    const text = fullText || 'No response received.';
+      // Fallback to non-streaming
+      const res = await fetch(`${API_BASE}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: TEXT_MODEL,
+          messages,
+          temperature: 0.7,
+          stream: false
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`API error: ${res.status} ${err}`);
+      }
+
+      const json = await res.json();
+      text = json.choices?.[0]?.message?.content || 'No response received.';
+      contentDiv.innerHTML = marked.parse(text);
+    }
 
     const data = { text, images: [] };
 
@@ -350,7 +383,13 @@ async function generate() {
 
     renderResponse(data, titleEl, contentDiv, imagesDiv, mode, book);
   } catch (err) {
-    contentDiv.innerHTML = `<p style="color: #c00;">Error: ${err.message}</p><p>Check your API key and try again. If you refreshed the page while it was still generating, the request was cancelled.</p>`;
+    const msg = err.message || 'Unknown error';
+    const isNetwork = msg.includes('Load failed') || msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('network');
+    contentDiv.innerHTML = `<p style="color: #c00;">Error: ${msg}</p>
+      <p>${isNetwork 
+        ? 'This looks like a network or connection problem (common on mobile with long responses). Please try again. If it keeps happening, try a stronger Wi-Fi connection or wait a moment.' 
+        : 'Check your API key and try again. If you refreshed the page while it was still generating, the request was cancelled.'}</p>
+      <p><button onclick="document.getElementById(\'generateBtn\').click()">Retry</button></p>`;
   } finally {
     clearInterval(timer);
     loading.classList.add('hidden');
