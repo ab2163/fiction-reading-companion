@@ -73,6 +73,22 @@ function renderHistory() {
           ? `${item.book} — Quote`
           : `${item.book} — Q: ${item.extra.slice(0, 40)}${item.extra.length > 40 ? '…' : ''}`;
     div.innerHTML = `<div>${label}</div><div class="meta">${item.mode} · ${new Date(item.timestamp).toLocaleDateString()}</div>`;
+    
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent = '×';
+    removeBtn.className = 'remove-btn';
+    removeBtn.title = 'Remove this entry and clear its cache';
+    removeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (confirm('Remove this from history and clear the cached response?')) {
+        localStorage.removeItem(item.cacheKey);
+        const updated = getHistory().filter(h => h.cacheKey !== item.cacheKey);
+        saveHistory(updated);
+        renderHistory();
+      }
+    });
+    div.appendChild(removeBtn);
+    
     div.addEventListener('click', () => loadFromHistory(item));
     list.appendChild(div);
   });
