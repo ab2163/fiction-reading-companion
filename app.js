@@ -78,6 +78,9 @@ function renderHistory() {
     removeBtn.textContent = '×';
     removeBtn.className = 'remove-btn';
     removeBtn.title = 'Remove this entry and clear its cache';
+    removeBtn.style.color = '#f5e6c8';
+    removeBtn.style.fontSize = '1.4rem';
+    removeBtn.style.fontWeight = 'bold';
     removeBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       if (confirm('Remove this from history and clear the cached response?')) {
