@@ -397,9 +397,10 @@ async function generate() {
     const isNetwork = msg.includes('Load failed') || msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('network');
     contentDiv.innerHTML = `<p style="color: #c00;">Error: ${msg}</p>
       <p>${isNetwork 
-        ? 'This looks like a network or connection problem (common on mobile with long responses). Please try again. If it keeps happening, try a stronger Wi-Fi connection or wait a moment.' 
+        ? 'This is almost always the phone cancelling the request (especially if you switched apps). It is not an API key or quota problem — those return a different error message.' 
         : 'Check your API key and try again. If you refreshed the page while it was still generating, the request was cancelled.'}</p>
-      <p><button onclick="document.getElementById(\'generateBtn\').click()">Retry</button></p>`;
+      <p><button onclick="document.getElementById(\'generateBtn\').click()">Retry</button></p>
+      <p style="font-size:0.9rem; color:#aaa;">If this keeps happening on mobile, try a desktop browser or keep the Safari tab in the foreground the whole time.</p>`;
   } finally {
     clearInterval(timer);
     loading.classList.add('hidden');
