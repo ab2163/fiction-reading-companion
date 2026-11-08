@@ -12,7 +12,7 @@
     <header>
       <h1>Fiction Reading Companion</h1>
       <p>Your spoiler-friendly AI companion for deeper reading. Powered by Grok.</p>
-      <p style="font-size: 0.85rem; color: #888; margin-top: 0.2rem;">v1.7 — clearer progress stages</p>
+      <p style="font-size: 0.85rem; color: #888; margin-top: 0.2rem;">v1.8 — non-streaming by default (more reliable on mobile)</p>
     </header>
 
     <section class="settings">
@@ -51,6 +51,10 @@
 
       <label class="checkbox">
         <input type="checkbox" id="generateImages" checked> Generate illustrations for key scenes
+      </label>
+
+      <label class="checkbox">
+        <input type="checkbox" id="useStreaming"> Live text (streaming) — can be less reliable on mobile
       </label>
 
       <button id="generateBtn">Generate</button>
