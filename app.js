@@ -23,7 +23,9 @@ When asked for an overall summary, include:
 
 When asked about a chapter, explain what happens, the important moments and why they matter, and how the chapter fits into the bigger story. End with "## Key Scenes for Illustration" if it makes sense (1-2 scenes).
 
-When explaining a quote, say what it means, why it matters for the character or the story, and any interesting ideas or feelings it brings up.`;
+When explaining a quote, say what it means, why it matters for the character or the story, and any interesting ideas or feelings it brings up.
+
+When answering a general question about the book, author, characters, psychology, emotions, or any other aspect, give a clear, thoughtful, spoiler-friendly response that helps the reader understand more deeply.`;
 
 let apiKey = localStorage.getItem('xai_api_key') || '';
 const HISTORY_KEY = 'frc_history';
@@ -67,7 +69,9 @@ function renderHistory() {
       ? item.book
       : item.mode === 'chapter'
         ? `${item.book} — Ch. ${item.extra}`
-        : `${item.book} — Quote`;
+        : item.mode === 'quote'
+          ? `${item.book} — Quote`
+          : `${item.book} — Q: ${item.extra.slice(0, 40)}${item.extra.length > 40 ? '…' : ''}`;
     div.innerHTML = `<div>${label}</div><div class="meta">${item.mode} · ${new Date(item.timestamp).toLocaleDateString()}</div>`;
     div.addEventListener('click', () => loadFromHistory(item));
     list.appendChild(div);
@@ -94,8 +98,10 @@ function loadFromHistory(item) {
     titleEl.textContent = `${item.book} — Overall Context`;
   } else if (item.mode === 'chapter') {
     titleEl.textContent = `${item.book} — Chapter: ${item.extra}`;
-  } else {
+  } else if (item.mode === 'quote') {
     titleEl.textContent = `${item.book} — Quote Explanation`;
+  } else {
+    titleEl.textContent = `${item.book} — Question`;
   }
 
   renderResponse(data, titleEl, contentDiv, imagesDiv, item.mode, item.book);
@@ -132,6 +138,7 @@ function updateModeUI() {
   const mode = document.querySelector('input[name="mode"]:checked').value;
   document.getElementById('chapterInput').classList.toggle('hidden', mode !== 'chapter');
   document.getElementById('quoteInput').classList.toggle('hidden', mode !== 'quote');
+  document.getElementById('questionInput').classList.toggle('hidden', mode !== 'question');
 }
 
 function getCacheKey(book, mode, extra) {
@@ -153,6 +160,7 @@ async function generate() {
   const mode = document.querySelector('input[name="mode"]:checked').value;
   const chapter = document.getElementById('chapter').value.trim();
   const quote = document.getElementById('quote').value.trim();
+  const question = document.getElementById('question').value.trim();
   const generateImages = document.getElementById('generateImages').checked;
 
   if (mode === 'chapter' && !chapter) {
@@ -163,8 +171,15 @@ async function generate() {
     alert('Please enter a quote.');
     return;
   }
+  if (mode === 'question' && !question) {
+    alert('Please enter a question.');
+    return;
+  }
 
-  const extra = mode === 'chapter' ? chapter : mode === 'quote' ? quote.slice(0, 100) : '';
+  const extra = mode === 'chapter' ? chapter 
+    : mode === 'quote' ? quote.slice(0, 100) 
+    : mode === 'question' ? question.slice(0, 120) 
+    : '';
   const cacheKey = getCacheKey(book, mode, extra);
   const cached = localStorage.getItem(cacheKey);
 
@@ -200,9 +215,12 @@ async function generate() {
   } else if (mode === 'chapter') {
     userPrompt = `Provide detailed context and analysis for chapter "${chapter}" of the book "${book}".`;
     titleEl.textContent = `${book} — Chapter: ${chapter}`;
-  } else {
+  } else if (mode === 'quote') {
     userPrompt = `Explain the following quote or passage from the book "${book}":\n\n"${quote}"`;
     titleEl.textContent = `${book} — Quote Explanation`;
+  } else if (mode === 'question') {
+    userPrompt = `Answer the following question about the book "${book}":\n\n${question}`;
+    titleEl.textContent = `${book} — Question`;
   }
 
   try {
