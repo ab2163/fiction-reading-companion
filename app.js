@@ -212,6 +212,7 @@ async function generate() {
   imagesDiv.innerHTML = '';
   loading.classList.remove('hidden');
   document.getElementById('statusNote').style.display = 'block';
+  document.getElementById('stage').textContent = '— writing text';
   contentDiv.innerHTML = '';
 
   const startTime = Date.now();
@@ -345,6 +346,7 @@ async function generate() {
     const data = { text, images: [] };
 
     if (generateImages) {
+      document.getElementById('stage').textContent = '— generating images';
       const scenes = extractScenes(text);
       if (scenes.length === 0) {
         console.warn('No scenes extracted for image generation');
