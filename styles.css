@@ -170,10 +170,39 @@ button:hover {
   border: 1px solid var(--border);
 }
 
-#keyStatus {
-  margin-left: 0.5rem;
-  color: #8fbc8f;
-  font-size: 0.95rem;
+.history {
+  margin-bottom: 0.9rem;
+}
+
+#historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.history-item {
+  background: #111;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.6rem 0.8rem;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background 0.15s;
+}
+
+.history-item:hover {
+  background: #222;
+}
+
+.history-item .meta {
+  color: #c9b896;
+  font-size: 0.9rem;
+}
+
+.muted {
+  color: #888;
+  font-style: italic;
+  margin: 0.4rem 0 0;
 }
 
 @media (max-width: 600px) {
