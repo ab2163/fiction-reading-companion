@@ -1,8 +1,9 @@
 :root {
-  --bg: #faf8f5;
-  --text: #2c2c2c;
-  --accent: #5c4d3c;
-  --border: #e0d8cc;
+  --bg: #0f0f0f;
+  --text: #f5e6c8;
+  --accent: #d4af37;
+  --border: #2a2a2a;
+  --card: #1a1a1a;
   --serif: "Georgia", "Times New Roman", serif;
   --sans: system-ui, -apple-system, sans-serif;
 }
@@ -11,11 +12,12 @@
 
 body {
   margin: 0;
-  padding: 2rem 1rem;
+  padding: 1.5rem 1rem;
   background: var(--bg);
   color: var(--text);
   font-family: var(--sans);
-  line-height: 1.6;
+  font-size: 1.1rem;
+  line-height: 1.5;
 }
 
 .container {
@@ -25,49 +27,56 @@ body {
 
 header {
   text-align: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
 }
 
 header h1 {
   font-family: var(--serif);
   font-weight: normal;
-  font-size: 2.2rem;
-  margin-bottom: 0.5rem;
+  font-size: 2.4rem;
+  margin-bottom: 0.3rem;
+  color: var(--text);
 }
 
 header p {
-  color: #666;
+  color: #c9b896;
   font-style: italic;
+  font-size: 1.05rem;
 }
 
 section {
-  background: white;
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 1.1rem;
+  margin-bottom: 0.9rem;
 }
 
 h2 {
   font-family: var(--serif);
   font-weight: normal;
   margin-top: 0;
+  margin-bottom: 0.6rem;
+  font-size: 1.5rem;
 }
 
 label {
   display: block;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.3rem;
   font-weight: 500;
+  font-size: 1.05rem;
 }
 
 input[type="text"], input[type="password"], textarea {
   width: 100%;
-  padding: 0.7rem;
+  padding: 0.65rem;
   border: 1px solid var(--border);
   border-radius: 4px;
-  font-size: 1rem;
-  margin-bottom: 1rem;
+  font-size: 1.05rem;
+  margin-bottom: 0.75rem;
   font-family: inherit;
+  background: #111;
+  color: var(--text);
 }
 
 textarea {
@@ -76,12 +85,13 @@ textarea {
 
 button {
   background: var(--accent);
-  color: white;
+  color: #111;
   border: none;
-  padding: 0.7rem 1.4rem;
+  padding: 0.65rem 1.3rem;
   border-radius: 4px;
-  font-size: 1rem;
+  font-size: 1.05rem;
   cursor: pointer;
+  font-weight: 500;
 }
 
 button:hover {
@@ -90,8 +100,8 @@ button:hover {
 
 .mode-selector {
   display: flex;
-  gap: 1.5rem;
-  margin-bottom: 1rem;
+  gap: 1.2rem;
+  margin-bottom: 0.75rem;
   flex-wrap: wrap;
 }
 
@@ -99,15 +109,17 @@ button:hover {
   font-weight: normal;
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.35rem;
+  font-size: 1.05rem;
 }
 
 .checkbox {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin: 1rem 0;
+  gap: 0.45rem;
+  margin: 0.7rem 0;
   font-weight: normal;
+  font-size: 1.05rem;
 }
 
 .hidden {
@@ -115,17 +127,20 @@ button:hover {
 }
 
 #loading {
-  margin-top: 1rem;
+  margin-top: 0.7rem;
   font-style: italic;
-  color: #666;
+  color: #c9b896;
 }
 
 .output {
   font-family: var(--serif);
+  font-size: 1.12rem;
 }
 
 .output h2, .output h3 {
   font-family: var(--serif);
+  margin-top: 0.8rem;
+  margin-bottom: 0.4rem;
 }
 
 #content {
@@ -133,14 +148,20 @@ button:hover {
 }
 
 #content p, #content li {
-  margin-bottom: 1rem;
+  margin-bottom: 0.55rem;
+}
+
+#content ul, #content ol {
+  margin-top: 0.3rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1.4rem;
 }
 
 #images {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  margin-top: 1.5rem;
+  gap: 0.8rem;
+  margin-top: 1rem;
 }
 
 #images img {
@@ -151,13 +172,16 @@ button:hover {
 
 #keyStatus {
   margin-left: 0.5rem;
-  color: green;
-  font-size: 0.9rem;
+  color: #8fbc8f;
+  font-size: 0.95rem;
 }
 
 @media (max-width: 600px) {
   .mode-selector {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.4rem;
+  }
+  body {
+    font-size: 1.05rem;
   }
 }
