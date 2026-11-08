@@ -20,6 +20,81 @@ When asked about a chapter, explain what happens, the important moments and why 
 When explaining a quote, say what it means, why it matters for the character or the story, and any interesting ideas or feelings it brings up.`;
 
 let apiKey = localStorage.getItem('xai_api_key') || '';
+const HISTORY_KEY = 'frc_history';
+
+function getHistory() {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function saveHistory(history) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+}
+
+function addToHistory(entry) {
+  const history = getHistory();
+  const filtered = history.filter(h => h.cacheKey !== entry.cacheKey);
+  filtered.unshift(entry);
+  saveHistory(filtered.slice(0, 50));
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const empty = document.getElementById('historyEmpty');
+  const history = getHistory();
+
+  list.innerHTML = '';
+  if (history.length === 0) {
+    empty.classList.remove('hidden');
+    return;
+  }
+  empty.classList.add('hidden');
+
+  history.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    const label = item.mode === 'overall'
+      ? item.book
+      : item.mode === 'chapter'
+        ? `${item.book} — Ch. ${item.extra}`
+        : `${item.book} — Quote`;
+    div.innerHTML = `<div>${label}</div><div class="meta">${item.mode} · ${new Date(item.timestamp).toLocaleDateString()}</div>`;
+    div.addEventListener('click', () => loadFromHistory(item));
+    list.appendChild(div);
+  });
+}
+
+function loadFromHistory(item) {
+  const cached = localStorage.getItem(item.cacheKey);
+  if (!cached) {
+    alert('Cached data missing for this entry.');
+    return;
+  }
+  const data = JSON.parse(cached);
+  const output = document.getElementById('output');
+  const contentDiv = document.getElementById('content');
+  const imagesDiv = document.getElementById('images');
+  const titleEl = document.getElementById('outputTitle');
+
+  output.classList.remove('hidden');
+  imagesDiv.innerHTML = '';
+  contentDiv.innerHTML = '';
+
+  if (item.mode === 'overall') {
+    titleEl.textContent = `${item.book} — Overall Context`;
+  } else if (item.mode === 'chapter') {
+    titleEl.textContent = `${item.book} — Chapter: ${item.extra}`;
+  } else {
+    titleEl.textContent = `${item.book} — Quote Explanation`;
+  }
+
+  renderResponse(data, titleEl, contentDiv, imagesDiv, item.mode, item.book);
+  output.scrollIntoView({ behavior: 'smooth' });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   const apiKeyInput = document.getElementById('apiKey');
@@ -44,6 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateModeUI();
 
   document.getElementById('generateBtn').addEventListener('click', generate);
+  renderHistory();
 });
 
 function updateModeUI() {
@@ -99,6 +175,13 @@ async function generate() {
 
   if (cached) {
     const data = JSON.parse(cached);
+    addToHistory({
+      cacheKey,
+      book,
+      mode,
+      extra,
+      timestamp: Date.now()
+    });
     renderResponse(data, titleEl, contentDiv, imagesDiv, mode, book);
     loading.classList.add('hidden');
     return;
@@ -173,6 +256,15 @@ async function generate() {
     }
 
     localStorage.setItem(cacheKey, JSON.stringify(data));
+
+    addToHistory({
+      cacheKey,
+      book,
+      mode,
+      extra,
+      timestamp: Date.now()
+    });
+
     renderResponse(data, titleEl, contentDiv, imagesDiv, mode, book);
   } catch (err) {
     contentDiv.innerHTML = `<p style="color: #c00;">Error: ${err.message}</p><p>Check your API key and try again.</p>`;
