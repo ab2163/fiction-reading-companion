@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fiction Reading Companion</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Fiction Reading Companion</h1>
+      <p>Your spoiler-friendly AI companion for deeper reading. Powered by Grok.</p>
+    </header>
+
+    <section class="settings">
+      <h2>Settings</h2>
+      <label for="apiKey">xAI API Key</label>
+      <input type="password" id="apiKey" placeholder="Paste your API key (stored locally)">
+      <button id="saveKey">Save Key</button>
+      <span id="keyStatus"></span>
+    </section>
+
+    <section class="controls">
+      <label for="bookTitle">Book Title</label>
+      <input type="text" id="bookTitle" placeholder="e.g. Lord of the Rings">
+
+      <div class="mode-selector">
+        <label><input type="radio" name="mode" value="overall" checked> Overall Summary</label>
+        <label><input type="radio" name="mode" value="chapter"> Chapter Analysis</label>
+        <label><input type="radio" name="mode" value="quote"> Quote Explanation</label>
+      </div>
+
+      <div id="chapterInput" class="hidden">
+        <label for="chapter">Chapter (number or title)</label>
+        <input type="text" id="chapter" placeholder="e.g. 1 or The Shadow of the Past">
+      </div>
+
+      <div id="quoteInput" class="hidden">
+        <label for="quote">Quote or Passage</label>
+        <textarea id="quote" rows="4" placeholder="Paste a quote or short passage from the book"></textarea>
+      </div>
+
+      <label class="checkbox">
+        <input type="checkbox" id="generateImages" checked> Generate illustrations for key scenes
+      </label>
+
+      <button id="generateBtn">Generate</button>
+      <div id="loading" class="hidden">Thinking...</div>
+    </section>
+
+    <section id="output" class="output hidden">
+      <h2 id="outputTitle"></h2>
+      <div id="content"></div>
+      <div id="images"></div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+:root {
+  --bg: #faf8f5;
+  --text: #2c2c2c;
+  --accent: #5c4d3c;
+  --border: #e0d8cc;
+  --serif: "Georgia", "Times New Roman", serif;
+  --sans: system-ui, -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 2rem 1rem;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.6;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+header h1 {
+  font-family: var(--serif);
+  font-weight: normal;
+  font-size: 2.2rem;
+  margin-bottom: 0.5rem;
+}
+
+header p {
+  color: #666;
+  font-style: italic;
+}
+
+section {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+h2 {
+  font-family: var(--serif);
+  font-weight: normal;
+  margin-top: 0;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+}
+
+input[type="text"], input[type="password"], textarea {
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  font-family: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 0.7rem 1.4rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.mode-selector {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+.mode-selector label {
+  font-weight: normal;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+  font-weight: normal;
+}
+
+.hidden {
+  display: none !important;
+}
+
+#loading {
+  margin-top: 1rem;
+  font-style: italic;
+  color: #666;
+}
+
+.output {
+  font-family: var(--serif);
+}
+
+.output h2, .output h3 {
+  font-family: var(--serif);
+}
+
+#content {
+  white-space: pre-wrap;
+}
+
+#content p, #content li {
+  margin-bottom: 1rem;
+}
+
+#images {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+#images img {
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+
+#keyStatus {
+  margin-left: 0.5rem;
+  color: green;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+  .mode-selector {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
