@@ -275,6 +275,7 @@ async function generate() {
             model: TEXT_MODEL,
             messages,
             temperature: 0.7,
+            max_tokens: 1200,
             stream: true
           })
         });
@@ -327,6 +328,7 @@ async function generate() {
             model: TEXT_MODEL,
             messages,
             temperature: 0.7,
+            max_tokens: 1200,
             stream: false
           })
         });
