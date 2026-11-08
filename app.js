@@ -181,6 +181,7 @@ async function generate() {
   const quote = document.getElementById('quote').value.trim();
   const question = document.getElementById('question').value.trim();
   const generateImages = document.getElementById('generateImages').checked;
+  const useStreaming = document.getElementById('useStreaming').checked;
 
   if (mode === 'chapter' && !chapter) {
     alert('Please enter a chapter.');
@@ -260,87 +261,87 @@ async function generate() {
     ];
 
     let text = '';
-    let usedStreaming = true;
 
     try {
-      // Try streaming first
-      const res = await fetch(`${API_BASE}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: TEXT_MODEL,
-          messages,
-          temperature: 0.7,
-          stream: true
-        })
-      });
+      if (useStreaming) {
+        // Streaming path
+        const res = await fetch(`${API_BASE}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: TEXT_MODEL,
+            messages,
+            temperature: 0.7,
+            stream: true
+          })
+        });
 
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`API error: ${res.status} ${err}`);
-      }
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(`API error: ${res.status} ${err}`);
+        }
 
-      const reader = res.body.getReader();
-      const decoder = new TextDecoder();
-      let fullText = '';
-      let buffer = '';
+        const reader = res.body.getReader();
+        const decoder = new TextDecoder();
+        let fullText = '';
+        let buffer = '';
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const dataStr = line.slice(6).trim();
-            if (dataStr === '[DONE]') continue;
-            try {
-              const chunk = JSON.parse(dataStr);
-              const delta = chunk.choices?.[0]?.delta?.content || '';
-              if (delta) {
-                fullText += delta;
-                contentDiv.innerHTML = marked.parse(fullText);
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const dataStr = line.slice(6).trim();
+              if (dataStr === '[DONE]') continue;
+              try {
+                const chunk = JSON.parse(dataStr);
+                const delta = chunk.choices?.[0]?.delta?.content || '';
+                if (delta) {
+                  fullText += delta;
+                  contentDiv.innerHTML = marked.parse(fullText);
+                }
+              } catch (e) {
+                // ignore
               }
-            } catch (e) {
-              // ignore parse errors on partial chunks
             }
           }
         }
+        text = fullText || 'No response received.';
+      } else {
+        // Non-streaming (more reliable on mobile)
+        document.getElementById('stage').textContent = '— writing text (this may take a minute or two)';
+        const res = await fetch(`${API_BASE}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: TEXT_MODEL,
+            messages,
+            temperature: 0.7,
+            stream: false
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(`API error: ${res.status} ${err}`);
+        }
+
+        const json = await res.json();
+        text = json.choices?.[0]?.message?.content || 'No response received.';
+        contentDiv.innerHTML = marked.parse(text);
       }
-      text = fullText || 'No response received.';
-    } catch (streamErr) {
-      console.warn('Streaming failed, falling back to non-streaming:', streamErr);
-      usedStreaming = false;
-      contentDiv.innerHTML = '<p><em>Streaming failed, retrying normally…</em></p>';
-
-      // Fallback to non-streaming
-      const res = await fetch(`${API_BASE}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: TEXT_MODEL,
-          messages,
-          temperature: 0.7,
-          stream: false
-        })
-      });
-
-      if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`API error: ${res.status} ${err}`);
-      }
-
-      const json = await res.json();
-      text = json.choices?.[0]?.message?.content || 'No response received.';
-      contentDiv.innerHTML = marked.parse(text);
+    } catch (err) {
+      throw err; // rethrow for outer catch
     }
 
     const data = { text, images: [] };
