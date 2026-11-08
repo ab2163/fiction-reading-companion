@@ -346,6 +346,9 @@ async function generate() {
 
     if (generateImages) {
       const scenes = extractScenes(text);
+      if (scenes.length === 0) {
+        console.warn('No scenes extracted for image generation');
+      }
       for (const scene of scenes.slice(0, 3)) {
         try {
           const imgRes = await fetch(`${API_BASE}/images/generations`, {
@@ -364,6 +367,8 @@ async function generate() {
             const imgJson = await imgRes.json();
             const url = imgJson.data?.[0]?.url;
             if (url) data.images.push({ url, prompt: scene });
+          } else {
+            console.warn('Image API error:', imgRes.status, await imgRes.text());
           }
         } catch (e) {
           console.warn('Image gen failed for scene:', e);
@@ -400,8 +405,42 @@ async function generate() {
 function extractScenes(text) {
   const match = text.match(/## Key Scenes for Illustration\s*([\s\S]*?)(?=\n##|\n#|$)/i);
   if (!match) return [];
-  const lines = match[1].split('\n').map(l => l.trim()).filter(l => l.startsWith('-') || l.startsWith('*') || /^\d+\./.test(l));
-  return lines.map(l => l.replace(/^[-*\d.]\s*/, '').trim()).filter(Boolean);
+  
+  const section = match[1];
+  const lines = section.split('\n').map(l => l.trim()).filter(Boolean);
+  
+  const scenes = [];
+  let currentScene = '';
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    // Detect a label line: **1.** or **A.** or **•** or just 1. or • at start
+    const isLabel = /^(\*\*)?(\d+\.|[A-Z]\.|•|\*)(\*\*)?\s*$/i.test(line) || 
+                    /^(\*\*)?(\d+\.|[A-Z]\.|•)(\*\*)?/.test(line) && line.length < 20;
+    
+    if (isLabel) {
+      if (currentScene) scenes.push(currentScene.trim());
+      currentScene = '';
+      // If the label has text after it on the same line, capture it
+      const after = line.replace(/^(\*\*)?(\d+\.|[A-Z]\.|•|\*)(\*\*)?\s*/, '').trim();
+      if (after) currentScene = after;
+    } else if (currentScene !== undefined) {
+      currentScene += (currentScene ? ' ' : '') + line;
+    } else {
+      // First content before any label
+      currentScene = line;
+    }
+  }
+  if (currentScene) scenes.push(currentScene.trim());
+  
+  // Fallback: also grab any traditional bullets if present
+  const bullets = lines
+    .filter(l => l.startsWith('-') || l.startsWith('*') || /^\d+\./.test(l))
+    .map(l => l.replace(/^[-*\d.]\s*/, '').trim())
+    .filter(Boolean);
+  
+  const combined = [...new Set([...scenes, ...bullets])].filter(s => s.length > 10);
+  return combined.slice(0, 3);
 }
 
 function renderResponse(data, titleEl, contentDiv, imagesDiv, mode, book) {
