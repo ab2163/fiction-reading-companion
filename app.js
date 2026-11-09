@@ -10,7 +10,7 @@ Important formatting rules:
 - Use italics (*like this*) instead of quotation marks for emphasis, informal phrases, figures of speech, or book/character names when it feels natural. Avoid speech marks.
 - Do not use Markdown bullet points or numbered lists (no lines starting with -, *, or 1.). Lists remove useful margin on a phone. Instead, when you need a list of points, put a short label such as **1.** or **A.** or **•** on its own line, then write the paragraph that belongs to it underneath. This keeps every paragraph full-width.
 - Use Markdown headings (## and ###) for section titles. These will be shown in a different colour.
-- Keep paragraphs reasonably short.
+- Keep paragraphs reasonably short. Use a blank line between paragraphs so the app can show them one by one.
 
 When asked for an overall summary, include:
 - A clear plot overview
@@ -357,6 +357,7 @@ async function generate() {
         const decoder = new TextDecoder();
         let fullText = '';
         let buffer = '';
+        let displayedUpTo = 0;
 
         while (true) {
           const { done, value } = await reader.read();
@@ -374,7 +375,13 @@ async function generate() {
                 const delta = chunk.choices?.[0]?.delta?.content || '';
                 if (delta) {
                   fullText += delta;
-                  contentDiv.innerHTML = marked.parse(fullText);
+                  // Render complete paragraphs as they arrive
+                  const lastDouble = fullText.lastIndexOf('\n\n');
+                  if (lastDouble > displayedUpTo) {
+                    const toShow = fullText.slice(0, lastDouble + 2);
+                    contentDiv.innerHTML = marked.parse(toShow);
+                    displayedUpTo = lastDouble + 2;
+                  }
                 }
               } catch (e) {
                 // ignore
@@ -382,6 +389,8 @@ async function generate() {
             }
           }
         }
+        // Final render of everything
+        contentDiv.innerHTML = marked.parse(fullText);
         text = fullText || 'No response received.';
       } else {
         // Non-streaming (more reliable on mobile)
