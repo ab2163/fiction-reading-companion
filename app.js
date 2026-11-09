@@ -150,8 +150,76 @@ document.addEventListener('DOMContentLoaded', () => {
   updateModeUI();
 
   document.getElementById('generateBtn').addEventListener('click', generate);
+  document.getElementById('diagBtn').addEventListener('click', diagnosticTest);
   renderHistory();
 });
+
+async function diagnosticTest() {
+  if (!apiKey) {
+    alert('Please enter and save your xAI API key first.');
+    return;
+  }
+
+  const output = document.getElementById('output');
+  const contentDiv = document.getElementById('content');
+  const titleEl = document.getElementById('outputTitle');
+  const loading = document.getElementById('loading');
+  const elapsedEl = document.getElementById('elapsed');
+
+  output.classList.remove('hidden');
+  titleEl.textContent = 'Diagnostic Test';
+  contentDiv.innerHTML = '<p>Sending a minimal request…</p>';
+  loading.classList.remove('hidden');
+  document.getElementById('statusNote').style.display = 'block';
+
+  const start = Date.now();
+  const timer = setInterval(() => {
+    elapsedEl.textContent = `(${Math.floor((Date.now() - start) / 1000)}s)`;
+  }, 200);
+
+  try {
+    const res = await fetch(`${API_BASE}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: TEXT_MODEL,
+        messages: [
+          { role: 'system', content: 'Reply with exactly the single word OK and nothing else.' },
+          { role: 'user', content: 'OK' }
+        ],
+        temperature: 0,
+        max_tokens: 5,
+        stream: false
+      })
+    });
+
+    clearInterval(timer);
+    const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+
+    if (!res.ok) {
+      const errText = await res.text();
+      contentDiv.innerHTML = `<p style="color:#c00;">API error after ${elapsed}s: ${res.status}</p><pre>${errText}</pre>`;
+      return;
+    }
+
+    const json = await res.json();
+    const reply = json.choices?.[0]?.message?.content || '(empty)';
+    contentDiv.innerHTML = `<p><strong>Reply received in ${elapsed} seconds:</strong></p>
+      <p>${reply}</p>
+      <p style="color:#aaa; font-size:0.95rem;">If this was under ~5–10 seconds, the network and phone are fine. Longer delays on normal requests are almost certainly the model taking time to write a detailed response.</p>`;
+  } catch (err) {
+    clearInterval(timer);
+    const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+    contentDiv.innerHTML = `<p style="color:#c00;">Failed after ${elapsed}s: ${err.message}</p>
+      <p>This suggests a network or Safari issue, not the model.</p>`;
+  } finally {
+    loading.classList.add('hidden');
+    document.getElementById('statusNote').style.display = 'none';
+  }
+}
 
 function updateModeUI() {
   const mode = document.querySelector('input[name="mode"]:checked').value;
